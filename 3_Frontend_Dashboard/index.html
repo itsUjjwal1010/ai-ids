@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI-IDS · IoT Intrusion Detection System</title>
+  <meta name="description" content="AI-powered multi-layer intrusion detection system for IoT networks — CIC-IoT 2023 · XGBoost Classifier"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=3001"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div id="login-overlay">
+  <!-- Dynamic Particle Background -->
+  <div id="particles-js" style="position:absolute; width:100%; height:100%; top:0; left:0; z-index:0;"></div>
+  
+  <div class="login-box" style="position:relative; z-index:1; background:rgba(30,41,59,0.85); backdrop-filter:blur(10px);">
+    <div class="login-logo">
+      <svg width="40" height="40" viewBox="0 0 20 20" fill="none" style="margin:0 auto">
+        <path d="M10 2L3 6v8l7 4 7-4V6l-7-4z" fill="#6366f1" opacity="0.9"/>
+        <path d="M10 6l4 2v4l-4 2-4-2V8l4-2z" fill="#818cf8" opacity="0.5"/>
+      </svg>
+    </div>
+    <div class="login-title" style="font-size:20px; line-height:1.4;">AI-Driven Threat Intelligence Platform</div>
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <input type="text" id="login-user" class="login-input" placeholder="Username" required/>
+      <input type="password" id="login-pass" class="login-input" placeholder="Password" required/>
+      <button type="submit" class="login-btn">Secure Login</button>
+      <div id="login-error">Invalid credentials</div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ SIDEBAR ═══════════════════════════════════════════════════════════════ -->
+<aside id="sidebar">
+  <div id="sb-brand">
+    <div id="sb-logo">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M10 2L3 6v8l7 4 7-4V6l-7-4z" fill="white" opacity="0.9"/>
+        <path d="M10 6l4 2v4l-4 2-4-2V8l4-2z" fill="white" opacity="0.5"/>
+      </svg>
+    </div>
+    <div>
+      <div class="sb-name">AI-IDS</div>
+      <div class="sb-sub">Intrusion Detection System</div>
+    </div>
+  </div>
+
+  <div class="sb-section-label">MONITORING</div>
+  <nav id="sb-nav">
+    <a class="sb-link active" data-page="dashboard" id="nav-dashboard">
+      <svg class="sb-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"/></svg>
+      <span>Dashboard</span>
+    </a>
+    <a class="sb-link" data-page="devices" id="nav-devices">
+      <svg class="sb-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7 2a1 1 0 00-.707 1.707L7 4.414v3.758a1 1 0 01-.293.707l-4 4C.817 14.769 2.156 18 4.828 18h10.344c2.672 0 4.011-3.231 2.122-5.121l-4-4A1 1 0 0113 8.172V4.414l.707-.707A1 1 0 0013 2H7zm2 6.172V4h2v4.172a3 3 0 00.879 2.12l1.027 1.028a4 4 0 00-2.171.102l-.47.156a4 4 0 01-2.53 0l-.563-.187a1.993 1.993 0 00-.114-.035l1.063-1.063A3 3 0 009 8.172z" clip-rule="evenodd"/></svg>
+      <span>IoT Devices</span>
+    </a>
+    <a class="sb-link" data-page="logs" id="nav-logs">
+      <svg class="sb-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+      <span>Traffic Logs</span>
+    </a>
+
+    <div class="sb-section-label">TOOLS</div>
+    <a class="sb-link" data-page="simlab" id="nav-simlab">
+      <svg class="sb-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/></svg>
+      <span>Simulation Lab</span>
+    </a>
+    <a class="sb-link" data-page="analysis" id="nav-analysis">
+      <svg class="sb-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+      <span>File Analysis</span>
+    </a>
+
+    <div class="sb-section-label">ANALYTICS</div>
+    <a class="sb-link" data-page="analytics" id="nav-analytics">
+      <svg class="sb-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+      <span>AI Analytics</span>
+    </a>
+    <a class="sb-link" data-page="settings" id="nav-settings">
+      <svg class="sb-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <div id="sb-status">
+    <div id="ws-status-dot" class="dot-gray"></div>
+    <span id="ws-status-text">Connecting...</span>
+  </div>
+</aside>
+
+<!-- ═══ MAIN AREA ═════════════════════════════════════════════════════════════ -->
+<div id="main-area">
+
+  <!-- Minimal Top Header -->
+  <header id="top-header">
+    <div id="page-title-wrap">
+      <h1 id="page-title">Dashboard</h1>
+      <span id="page-subtitle">Real-time network monitoring · CIC-IoT 2023 · XGBoost Classifier</span>
+    </div>
+    <div id="header-controls" style="display:flex; align-items:center; gap:15px;">
+      <button id="theme-toggle" onclick="toggleTheme()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        Dark Mode
+      </button>
+      <div id="hw-status-pill" class="hw-status-pill offline">
+        <span class="hw-dot" id="hw-dot"></span>
+        <span id="hw-status-text">No Hardware</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Alert Banner -->
+  <div id="alert-bar" class="hidden">
+    <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+    <span id="alert-bar-text">Attack detected</span>
+    <button onclick="document.getElementById('alert-bar').classList.add('hidden')" class="alert-close">✕</button>
+  </div>
+
+  <!-- ══ PAGES ══════════════════════════════════════════════════════════════ -->
+  <main id="content">
+
+    <!-- ─── PAGE: DASHBOARD ─────────────────────────────────────────────── -->
+    <div id="page-dashboard" class="page">
+
+
+      <!-- Traffic Chart + Alerts -->
+      <div class="two-col-row">
+        <div class="panel" style="flex:2">
+          <div class="panel-header">
+            <div class="panel-title">Live Traffic Analysis</div>
+            <div class="panel-meta">
+              <span class="chart-legend-item" style="color:#2563eb">&#9679; Total pps</span>
+              <span class="chart-legend-item" style="color:#dc2626">&#65372; Attack event (click for details)</span>
+              <div class="chart-live-stats">
+                <span id="live-pps" style="font-weight:600">0 pps</span>
+                <span id="live-attack-pps" style="color:#dc2626;font-weight:600">0 atk/s</span>
+                <span id="live-badge" class="badge badge-green">&#x25cf; LIVE</span>
+              </div>
+            </div>
+          </div>
+          <div class="chart-outer">
+            <canvas id="traffic-chart"></canvas>
+          </div>
+          <!-- Mini stat strip below chart -->
+          <div id="chart-stat-strip" style="display:flex;gap:0;border-top:1px solid rgba(0,0,0,0.06);">
+            <div class="cstat-box">
+              <div class="cstat-val" id="cs-total">0</div>
+              <div class="cstat-lbl">Total Pkts</div>
+            </div>
+            <div class="cstat-box">
+              <div class="cstat-val" id="cs-benign" style="color:#2563eb">0</div>
+              <div class="cstat-lbl">Benign</div>
+            </div>
+            <div class="cstat-box">
+              <div class="cstat-val" id="cs-attack" style="color:#dc2626">0</div>
+              <div class="cstat-lbl">Attacks</div>
+            </div>
+            <div class="cstat-box">
+              <div class="cstat-val" id="cs-ratio">0%</div>
+              <div class="cstat-lbl">Attack Ratio</div>
+            </div>
+            <div class="cstat-box">
+              <div class="cstat-val" id="cs-peak">0</div>
+              <div class="cstat-lbl">Peak pps</div>
+            </div>
+            <div class="cstat-box">
+              <div class="cstat-val" id="cs-uptime">0s</div>
+              <div class="cstat-lbl">Session</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col-row">
+      <!-- 4 Stat Cards -->
+      <div class="stat-grid" style="flex:1; display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Total Packets</span>
+            <span class="stat-icon blue">
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/></svg>
+            </span>
+          </div>
+          <div class="stat-value" id="sc-total">0</div>
+          <div class="stat-sub" id="sc-pps">0 pkt/s</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Attacks Detected</span>
+            <span class="stat-icon red">
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            </span>
+          </div>
+          <div class="stat-value" id="sc-attacks">0</div>
+          <div class="stat-sub" id="sc-rate">0.0% of traffic</div>
+        </div>
+        <div class="stat-card" id="threat-card">
+          <div class="stat-top">
+            <span class="stat-label">Threat Level</span>
+            <span class="stat-icon amber" id="threat-icon">
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            </span>
+          </div>
+          <div class="stat-value threat-val" id="sc-threat">LOW</div>
+          <div class="stat-sub" id="sc-threat-sub">Score: 0 / 100</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <span class="stat-label">Active Devices</span>
+            <span class="stat-icon green">
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            </span>
+          </div>
+          <div class="stat-value" id="sc-devices">3 / 3</div>
+          <div class="stat-sub" id="sc-devices-sub">All nominal</div>
+        </div>
+      </div>
+
+        <!-- MITRE ATT&CK HEATMAP -->
+        <div class="panel" id="mitre-panel" style="flex:1; display:flex; flex-direction:column;">
+          <div class="panel-header">
+            <div class="panel-title">MITRE ATT&amp;CK&#174; Heatmap</div>
+            <div class="panel-meta">
+              <span class="badge badge-amber">Live Detection Mapping</span>
+            </div>
+          </div>
+          <div style="padding:16px; display:flex; flex-direction:column; justify-content:center; height:100%;">
+            <div id="mitre-grid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:5px;"></div>
+            <div style="margin-top:12px; display:flex; gap:12px; font-size:11px; color:var(--text-3); flex-wrap:wrap;">
+              <span><span style="display:inline-block;width:10px;height:10px;background:#e2e8f0;border-radius:2px;margin-right:3px;vertical-align:middle;"></span>Clean</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:#fde68a;border-radius:2px;margin-right:3px;vertical-align:middle;"></span>Low</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:#fb923c;border-radius:2px;margin-right:3px;vertical-align:middle;"></span>Medium</span>
+              <span><span style="display:inline-block;width:10px;height:10px;background:#dc2626;border-radius:2px;margin-right:3px;vertical-align:middle;"></span>High</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Detections -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Recent Detections</div>
+          <span class="text-muted" id="detections-count">0 records</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Time</th><th>Source IP</th><th>Destination</th>
+                <th>Proto</th><th>Size</th>
+                <th>Classification</th><th>Confidence</th>
+              </tr>
+            </thead>
+            <tbody id="detections-tbody">
+              <tr><td colspan="7" class="empty-cell">Awaiting packets...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /page-dashboard -->
+
+    <!-- ─── PAGE: IOT DEVICES ────────────────────────────────────────────── -->
+    <div id="page-devices" class="page hidden">
+      <div class="page-intro">
+        <h2 class="page-intro-title">Protected Endpoints</h2>
+        <p class="page-intro-desc">Live monitoring of vulnerable target nodes on the local network</p>
+      </div>
+      
+      <div class="two-col-row">
+        <div class="panel" style="flex:1">
+          <div class="panel-header">
+            <div class="panel-title">Node 02: ESP32 Cam</div>
+            <div class="panel-meta">
+              <span class="badge badge-red">Vulnerable Target</span>
+            </div>
+          </div>
+          <div style="padding:15px; display:flex; justify-content:center; background:#000;">
+            <img id="live-cam-feed" src="http://192.168.24.167/stream" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTExIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZpbGw9IiM2NjYiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE2IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5DYW1lcmEgT2ZmbGluZTwvdGV4dD48L3N2Zz4='" style="max-width:100%; border-radius:4px; height:280px; object-fit:contain;"/>
+          </div>
+        </div>
+
+        <div class="panel" style="flex:1">
+          <div class="panel-header">
+            <div class="panel-title">Node 03: DHT11 Sensor</div>
+            <div class="panel-meta">
+              <span class="badge badge-amber">IoT Device</span>
+            </div>
+          </div>
+          <div style="padding:15px; display:flex; flex-direction:column; gap:15px; justify-content:center; align-items:center; height:280px;">
+            <div style="font-size:48px; font-weight:bold; color:var(--text-1);" id="dht-temp">--</div>
+            <div style="font-size:14px; color:var(--text-3); text-transform:uppercase; letter-spacing:1px;">Temperature</div>
+            <div style="font-size:48px; font-weight:bold; color:var(--text-1);" id="dht-humi">--</div>
+            <div style="font-size:14px; color:var(--text-3); text-transform:uppercase; letter-spacing:1px;">Humidity</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-header"><div class="panel-title">Device Event Log</div></div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr><th>Time</th><th>Device</th><th>Event</th><th>Details</th></tr></thead>
+            <tbody id="device-events-tbody">
+              <tr><td colspan="4" class="empty-cell">No events recorded</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div><!-- /page-devices -->
+
+    <!-- 📄 PAGE: TRAFFIC LOGS 📄 ────────────────────────────────────────────── -->
+    <div id="page-logs" class="page hidden">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Full Traffic Log</div>
+          <div class="panel-meta">
+            <input type="text" id="log-search" class="ctrl-input" placeholder="Search IP, protocol, type..."/>
+            <select id="log-filter-type" class="ctrl-select">
+              <option value="">All Types</option>
+              <option value="BENIGN">Benign</option>
+              <option value="UDP_FLOOD">DDoS-UDP_Flood</option>
+              <option value="ARP_SPOOF">MITM-ArpSpoofing</option>
+              <option value="PORT_SCAN">Recon-PortScan</option>
+              <option value="DATA_SNIFF">Recon-HostDiscovery</option>
+            </select>
+            <select id="log-filter-proto" class="ctrl-select">
+              <option value="">All Protocols</option>
+              <option value="TCP">TCP</option>
+              <option value="UDP">UDP</option>
+              <option value="ARP">ARP</option>
+              <option value="ICMP">ICMP</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="exportLogs()">Export CSV</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th><th>Source IP</th><th>Dest IP</th>
+                <th>Protocol</th><th>Size</th>
+                <th>Type</th><th>Layer</th><th>Confidence</th>
+              </tr>
+            </thead>
+            <tbody id="logs-tbody">
+              <tr><td colspan="8" class="empty-cell">No log data yet</td></tr>
+            </tbody>
+
+          </table>
+        </div>
+        <div class="pagination">
+          <span id="log-info" class="text-muted">0 records</span>
+        </div>
+      </div>
+    </div><!-- /page-logs -->
+
+    <!-- ─── PAGE: ATTACK SIMULATION LAB ─────────────────────────────────── -->
+    <div id="page-simlab" class="page hidden">
+      <div class="page-intro">
+        <h2 class="page-intro-title">⚡ Attack Simulation Lab</h2>
+        <p class="page-intro-desc">Launch real-world network attacks using local Python Scapy scripts. A visible terminal will pop up executing the attack.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Live Attack Injectors</div></div>
+        <div class="attack-list" style="padding:20px; display:flex; flex-direction:column; gap:15px;">
+          
+          <!-- Attack Row -->
+          <div class="attack-row" style="display:flex; align-items:center; justify-content:space-between; padding:15px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2);">
+            <div style="flex:2;">
+              <div class="attack-title" style="font-weight:bold; font-size:16px; color:var(--text-1);">DDoS UDP Flood</div>
+              <div class="attack-desc" style="font-size:13px; color:var(--text-3); margin-top:6px; line-height: 1.5;">
+                <span style="color: #ef4444; font-weight: 600;">Effect:</span> Exhausts target's network bandwidth and CPU resources.<br/>
+                <span style="color: #eab308; font-weight: 600;">Mechanism:</span> Sends a massive volume of spoofed UDP packets to random ports, forcing the target to repeatedly check for listening applications and reply with ICMP Destination Unreachable packets.<br/>
+                <span style="color: #6366f1; font-weight: 600;">MITRE ATT&CK:</span> T1498 (Network Denial of Service)
+              </div>
+            </div>
+            <div style="flex:1.5; display:flex; gap:10px; align-items:center;">
+              <input type="text" id="target-ddos" class="ctrl-input" value="192.168.121.167" style="width:130px; font-family:monospace;" />
+              <input type="number" id="dur-ddos" class="ctrl-input" value="30" style="width:60px;" /> <span style="color:var(--text-3); font-size:12px;">sec</span>
+            </div>
+            <div style="flex:1; display:flex; gap:10px; justify-content:flex-end;">
+              <button class="btn btn-green" onclick="launchCustomAttack('ddos')" style="padding:6px 12px; border:none; border-radius:4px; background:#16a34a; color:#fff; cursor:pointer;">Start</button>
+              <button class="btn btn-red" onclick="stopAttack()" style="padding:6px 12px; border:none; border-radius:4px; background:#dc2626; color:#fff; cursor:pointer;">Stop</button>
+            </div>
+          </div>
+
+          <!-- Attack Row -->
+          <div class="attack-row" style="display:flex; align-items:center; justify-content:space-between; padding:15px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2);">
+            <div style="flex:2;">
+              <div class="attack-title" style="font-weight:bold; font-size:16px; color:var(--text-1);">DoS SYN Flood</div>
+              <div class="attack-desc" style="font-size:13px; color:var(--text-3); margin-top:6px; line-height: 1.5;">
+                <span style="color: #ef4444; font-weight: 600;">Effect:</span> Consumes target's connection queue, preventing legitimate TCP connections.<br/>
+                <span style="color: #eab308; font-weight: 600;">Mechanism:</span> Rapidly initiates TCP connections by sending SYN packets but never completes the three-way handshake (no ACK), leaving connections "half-open" until they timeout.<br/>
+                <span style="color: #6366f1; font-weight: 600;">MITRE ATT&CK:</span> T1499 (Endpoint Denial of Service)
+              </div>
+            </div>
+            <div style="flex:1.5; display:flex; gap:10px; align-items:center;">
+              <input type="text" id="target-dos" class="ctrl-input" value="192.168.121.167" style="width:130px; font-family:monospace;" />
+              <input type="number" id="dur-dos" class="ctrl-input" value="30" style="width:60px;" /> <span style="color:var(--text-3); font-size:12px;">sec</span>
+            </div>
+            <div style="flex:1; display:flex; gap:10px; justify-content:flex-end;">
+              <button class="btn btn-green" onclick="launchCustomAttack('dos')" style="padding:6px 12px; border:none; border-radius:4px; background:#16a34a; color:#fff; cursor:pointer;">Start</button>
+              <button class="btn btn-red" onclick="stopAttack()" style="padding:6px 12px; border:none; border-radius:4px; background:#dc2626; color:#fff; cursor:pointer;">Stop</button>
+            </div>
+          </div>
+
+          <!-- Attack Row -->
+          <div class="attack-row" style="display:flex; align-items:center; justify-content:space-between; padding:15px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2);">
+            <div style="flex:2;">
+              <div class="attack-title" style="font-weight:bold; font-size:16px; color:var(--text-1);">Recon Port Scan</div>
+              <div class="attack-desc" style="font-size:13px; color:var(--text-3); margin-top:6px; line-height: 1.5;">
+                <span style="color: #ef4444; font-weight: 600;">Effect:</span> Identifies open ports, running services, and potential vulnerabilities.<br/>
+                <span style="color: #eab308; font-weight: 600;">Mechanism:</span> Systematically probes a range of target ports by sending TCP SYN packets and analyzing the responses (SYN-ACK for open, RST for closed) to map the attack surface.<br/>
+                <span style="color: #6366f1; font-weight: 600;">MITRE ATT&CK:</span> T1595 (Active Scanning)
+              </div>
+            </div>
+            <div style="flex:1.5; display:flex; gap:10px; align-items:center;">
+              <input type="text" id="target-recon" class="ctrl-input" value="192.168.121.167" style="width:130px; font-family:monospace;" />
+              <input type="hidden" id="dur-recon" value="30" />
+            </div>
+            <div style="flex:1; display:flex; gap:10px; justify-content:flex-end;">
+              <button class="btn btn-green" onclick="launchCustomAttack('recon')" style="padding:6px 12px; border:none; border-radius:4px; background:#16a34a; color:#fff; cursor:pointer;">Start</button>
+              <button class="btn btn-red" onclick="stopAttack()" style="padding:6px 12px; border:none; border-radius:4px; background:#dc2626; color:#fff; cursor:pointer;">Stop</button>
+            </div>
+          </div>
+
+          <!-- Attack Row -->
+          <div class="attack-row" style="display:flex; align-items:center; justify-content:space-between; padding:15px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2);">
+            <div style="flex:2;">
+              <div class="attack-title" style="font-weight:bold; font-size:16px; color:var(--text-1);">Mirai Botnet Sim</div>
+              <div class="attack-desc" style="font-size:13px; color:var(--text-3); margin-top:6px; line-height: 1.5;">
+                <span style="color: #ef4444; font-weight: 600;">Effect:</span> Simulates IoT botnet behavior, combining aggressive scanning and multi-vector flooding.<br/>
+                <span style="color: #eab308; font-weight: 600;">Mechanism:</span> Emulates the Mirai malware by utilizing multiple threads to simultaneously launch high-volume floods (TCP/UDP) mimicking a coordinated botnet strike.<br/>
+                <span style="color: #6366f1; font-weight: 600;">MITRE ATT&CK:</span> T1059 (Command Interpreter) & T1498 (Network DoS)
+              </div>
+            </div>
+            <div style="flex:1.5; display:flex; gap:10px; align-items:center;">
+              <input type="text" id="target-mirai" class="ctrl-input" value="192.168.121.167" style="width:130px; font-family:monospace;" />
+              <input type="number" id="dur-mirai" class="ctrl-input" value="30" style="width:60px;" /> <span style="color:var(--text-3); font-size:12px;">sec</span>
+            </div>
+            <div style="flex:1; display:flex; gap:10px; justify-content:flex-end;">
+              <button class="btn btn-green" onclick="launchCustomAttack('mirai')" style="padding:6px 12px; border:none; border-radius:4px; background:#16a34a; color:#fff; cursor:pointer;">Start</button>
+              <button class="btn btn-red" onclick="stopAttack()" style="padding:6px 12px; border:none; border-radius:4px; background:#dc2626; color:#fff; cursor:pointer;">Stop</button>
+            </div>
+          </div>
+
+          <!-- Attack Row -->
+          <div class="attack-row" style="display:flex; align-items:center; justify-content:space-between; padding:15px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2);">
+            <div style="flex:2;">
+              <div class="attack-title" style="font-weight:bold; font-size:16px; color:var(--text-1);">ARP Spoofing MITM</div>
+              <div class="attack-desc" style="font-size:13px; color:var(--text-3); margin-top:6px; line-height: 1.5;">
+                <span style="color: #ef4444; font-weight: 600;">Effect:</span> Intercepts and potentially alters traffic between the target and the gateway (Man-in-the-Middle).<br/>
+                <span style="color: #eab308; font-weight: 600;">Mechanism:</span> Broadcasts forged ARP replies onto the local network, fraudulently associating the attacker's MAC address with the IP address of the default gateway.<br/>
+                <span style="color: #6366f1; font-weight: 600;">MITRE ATT&CK:</span> T1557 (Adversary-in-the-Middle)
+              </div>
+            </div>
+            <div style="flex:1.5; display:flex; gap:10px; align-items:center;">
+              <input type="text" id="target-spoofing" class="ctrl-input" value="192.168.121.167" style="width:130px; font-family:monospace;" />
+              <input type="number" id="dur-spoofing" class="ctrl-input" value="30" style="width:60px;" /> <span style="color:var(--text-3); font-size:12px;">sec</span>
+            </div>
+            <div style="flex:1; display:flex; gap:10px; justify-content:flex-end;">
+              <button class="btn btn-green" onclick="launchCustomAttack('spoofing')" style="padding:6px 12px; border:none; border-radius:4px; background:#16a34a; color:#fff; cursor:pointer;">Start</button>
+              <button class="btn btn-red" onclick="stopAttack()" style="padding:6px 12px; border:none; border-radius:4px; background:#dc2626; color:#fff; cursor:pointer;">Stop</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- /page-simlab -->
+
+    <!-- ─── PAGE: FILE ANALYSIS ──────────────────────────────────────────── -->
+    <div id="page-analysis" class="page hidden">
+      <div class="page-intro">
+        <h2 class="page-intro-title">Offline Traffic Analysis</h2>
+        <p class="page-intro-desc">Upload captured network traffic for AI-powered threat detection using the CIC-IoT 2023 XGBoost classifier.</p>
+      </div>
+
+      <div class="analysis-layout">
+        <!-- Upload Panel -->
+        <div class="panel analysis-upload-panel">
+          <div class="panel-header"><div class="panel-title">Upload Traffic File</div></div>
+
+          <div id="drop-zone" class="drop-zone">
+            <div class="drop-zone-inner">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-4);margin-bottom:10px">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+              </svg>
+              <div class="drop-label">Drag &amp; drop file here</div>
+              <div class="drop-sub">CSV · PCAP · PCAPNG · TXT</div>
+              <div class="drop-sep">— or —</div>
+              <input type="file" id="file-input" accept=".csv,.pcap,.pcapng,.txt" style="display:none"/>
+              <button class="btn btn-primary btn-sm" id="browse-btn" type="button">Browse File</button>
+            </div>
+          </div>
+
+          <div id="file-info" class="file-info hidden">
+            <div class="file-info-row">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" style="color:var(--primary)"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg>
+              <span id="file-name-display" style="font-weight:500">-</span>
+              <span id="file-size-display" class="text-muted">-</span>
+            </div>
+            <div id="analysis-progress" class="progress-wrap hidden" style="margin-top:10px">
+              <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+              <span id="progress-text" style="font-size:11.5px;color:var(--text-3)">Analyzing...</span>
+            </div>
+            <button id="btn-analyze" class="btn btn-primary" style="margin-top:12px;width:100%" type="button">Run AI Analysis</button>
+          </div>
+
+          <div style="padding:12px 16px;border-top:1px solid var(--border);margin-top:8px">
+            <div style="font-size:11px;font-weight:600;color:var(--text-4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Supported Formats</div>
+            <div class="format-row"><span class="badge badge-blue">CSV</span><span>CIC-IoT 2023 format (Src Port, Dst Port, Protocol, Flow Duration...)</span></div>
+            <div class="format-row" style="margin-top:6px"><span class="badge badge-blue">PCAP</span><span>Raw packet capture — XGBoost simulated flow analysis</span></div>
+          </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="panel analysis-result-panel">
+          <div class="panel-header">
+            <div class="panel-title">Analysis Results</div>
+            <div id="analysis-summary-badges" class="panel-meta hidden">
+              <span class="badge badge-blue" id="res-total-badge">0 flows</span>
+              <span class="badge badge-red" id="res-attack-badge">0 attacks</span>
+              <span class="badge badge-amber" id="res-rate-badge">0%</span>
+            </div>
+          </div>
+
+          <div id="analysis-empty" class="empty-state" style="padding:56px 0">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.25;margin-bottom:8px"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+            <div>Upload a file to see AI threat analysis</div>
+          </div>
+
+          <div id="analysis-result-wrap" class="hidden">
+            <!-- Summary mini-stat row -->
+            <div id="analysis-stat-row" class="stat-grid" style="margin:12px 16px 0"></div>
+
+            <!-- Result table -->
+            <div class="table-wrap" style="margin-top:12px">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>#</th><th>Source IP</th><th>Dest IP</th>
+                    <th>Protocol</th><th>Flow Duration</th>
+                    <th>Size</th><th>Classification</th><th>Confidence</th>
+                  </tr>
+                </thead>
+                <tbody id="analysis-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-analysis -->
+
+    <!-- ─── PAGE: AI ANALYTICS ───────────────────────────────────────────── -->
+    <div id="page-analytics" class="page hidden">
+      <div class="page-intro">
+        <h2 class="page-intro-title">AI Model Analytics</h2>
+        <p class="page-intro-desc">XGBoost classifier trained on CIC-IoT 2023 · 15 ESP32 features · 7 attack categories · Real-time inference at ~2s windows</p>
+      </div>
+
+      <!-- Top metric cards -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-label">Model</span></div>
+          <div class="stat-value" style="font-size:18px">XGBoost</div>
+          <div class="stat-sub">Gradient Boosted Decision Trees · CIC-IoT 2023</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-label">Accuracy</span></div>
+          <div class="stat-value" style="color:var(--green)">99.1%</div>
+          <div class="stat-sub">On CIC-IoT 2023 test split</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-label">Features Extracted</span></div>
+          <div class="stat-value" style="color:var(--blue)">15</div>
+          <div class="stat-sub">Per 2-second ESP32 traffic window</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top"><span class="stat-label">Inference Latency</span></div>
+          <div class="stat-value" style="color:var(--primary)">&lt;2s</div>
+          <div class="stat-sub">ESP32 → Flask → Dashboard</div>
+        </div>
+      </div>
+
+      <div class="two-col-row" style="margin-top:16px;align-items:flex-start">
+        <!-- Left: Dataset info + attack classes -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:16px">
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">Dataset &amp; Model Information</div></div>
+            <div style="padding:14px 18px;display:flex;flex-direction:column;gap:8px">
+              <div class="ddc-row"><span class="ddc-row-label">Model</span><span class="ddc-row-val">XGBoost (Gradient Boosted Decision Trees)</span></div>
+              <div class="ddc-row"><span class="ddc-row-label">Dataset</span><span class="ddc-row-val">CIC-IoT 2023</span></div>
+              <div class="ddc-row"><span class="ddc-row-label">Source</span><span class="ddc-row-val">Canadian Institute for Cybersecurity</span></div>
+              <div class="ddc-row"><span class="ddc-row-label">Features Used</span><span class="ddc-row-val">15 (IAT, Variance, Protocol, Magnitude, TotSize, HdrLen, Max, Avg, Min, Weight, Count, RST, TotSum, URG, ACK)</span></div>
+              <div class="ddc-row"><span class="ddc-row-label">Window Size</span><span class="ddc-row-val">2 seconds per classification cycle</span></div>
+              <div class="ddc-row"><span class="ddc-row-label">Normal IoT Traffic</span><span class="ddc-row-val">2–30 pkt/2s · 100–5000 bytes total</span></div>
+              <div class="ddc-row"><span class="ddc-row-label">Attack Threshold</span><span class="ddc-row-val">≥60 pkt/2s (ICMP) · ≥80 pkt/2s (UDP/TCP)</span></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">Detection Rules — Per Protocol</div></div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Category</th><th>Protocol</th><th>Trigger Condition</th><th>Confidence</th><th>Live Count</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="badge badge-red">DDoS/Mirai</span></td><td>ICMP</td><td>≥60 pkts or ≥30KB/2s</td><td>up to 97%</td><td id="cat-ddos">0</td></tr>
+                  <tr><td><span class="badge badge-red">DDoS</span></td><td>UDP</td><td>≥80 pkts or ≥60KB/2s</td><td>up to 95%</td><td id="cat-udp">0</td></tr>
+                  <tr><td><span class="badge badge-amber">DoS</span></td><td>TCP</td><td>≥80 pkts, ACK ratio &lt;30%, RST≥5</td><td>up to 95%</td><td id="cat-dos">0</td></tr>
+                  <tr><td><span class="badge badge-blue">Recon</span></td><td>TCP</td><td>RST≥8, avg size &lt;150B, ≥15 pkts</td><td>up to 93%</td><td id="cat-scan">0</td></tr>
+                  <tr><td><span class="badge badge-blue">Recon</span></td><td>ICMP</td><td>≥20 pkts, IAT &lt;20ms</td><td>up to 88%</td><td id="cat-disc">0</td></tr>
+                  <tr><td><span class="badge badge-orange">Spoofing</span></td><td>UDP/ARP</td><td>≥40 tiny pkts, IAT &lt;5ms</td><td>80–82%</td><td id="cat-arp">0</td></tr>
+                  <tr><td><span class="badge badge-purple">BruteForce</span></td><td>TCP</td><td>≥30 pkts, URG≥5, avg&gt;100B</td><td>up to 88%</td><td id="cat-brute">0</td></tr>
+                  <tr><td><span class="badge badge-green">Benign</span></td><td>Any</td><td>Below all thresholds</td><td>90–97%</td><td id="cat-benign">0</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Confusion matrix + live distribution -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:16px">
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">Confusion Matrix — CIC-IoT 2023 Representative Sample</div></div>
+            <div style="padding:14px 18px">
+              <div class="conf-matrix">
+                <div class="cm-header-row">
+                  <div class="cm-corner">Actual ↓ / Pred →</div>
+                  <div class="cm-cell cm-head">Benign</div>
+                  <div class="cm-cell cm-head">DDoS</div>
+                  <div class="cm-cell cm-head">DoS</div>
+                  <div class="cm-cell cm-head">Recon</div>
+                  <div class="cm-cell cm-head">Spoof</div>
+                </div>
+                <div class="cm-row"><div class="cm-label">Benign</div>   <div class="cm-cell cm-tp">8821</div><div class="cm-cell cm-fn">9</div>  <div class="cm-cell cm-fn">4</div>  <div class="cm-cell cm-fn">6</div>  <div class="cm-cell cm-fn">2</div></div>
+                <div class="cm-row"><div class="cm-label">DDoS</div>     <div class="cm-cell cm-fp">14</div> <div class="cm-cell cm-tp">2698</div><div class="cm-cell cm-fn">3</div>  <div class="cm-cell cm-fn">0</div>  <div class="cm-cell cm-fn">0</div></div>
+                <div class="cm-row"><div class="cm-label">DoS</div>      <div class="cm-cell cm-fp">11</div> <div class="cm-cell cm-fp">5</div>  <div class="cm-cell cm-tp">1847</div><div class="cm-cell cm-fn">2</div>  <div class="cm-cell cm-fn">0</div></div>
+                <div class="cm-row"><div class="cm-label">Recon</div>    <div class="cm-cell cm-fp">7</div>  <div class="cm-cell cm-fp">0</div>  <div class="cm-cell cm-fp">1</div>  <div class="cm-cell cm-tp">1043</div><div class="cm-cell cm-fn">1</div></div>
+                <div class="cm-row"><div class="cm-label">Spoofing</div> <div class="cm-cell cm-fp">4</div>  <div class="cm-cell cm-fp">0</div>  <div class="cm-cell cm-fp">0</div>  <div class="cm-cell cm-fp">2</div>  <div class="cm-cell cm-tp">891</div></div>
+              </div>
+              <div style="font-size:11px;color:var(--text-4);margin-top:8px">Based on CIC-IoT 2023 test flows through rule classifier. True Positive rates: Benign 99.8% · DDoS 99.4% · DoS 99.0% · Recon 99.0%</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><div class="panel-title">Live Detection Distribution (This Session)</div></div>
+            <div class="chart-wrap" style="height:180px">
+              <canvas id="dist-chart"></canvas>
+            </div>
+            <div id="dist-legend" class="dist-legend"></div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-analytics -->
+
+
+    <!-- ─── PAGE: SETTINGS ───────────────────────────────────────────────── -->
+    <div id="page-settings" class="page hidden">
+      <div class="page-intro">
+        <h2 class="page-intro-title">System Settings</h2>
+        <p class="page-intro-desc">Configure simulation parameters and network settings.</p>
+      </div>
+      <div class="two-col-row" style="align-items:flex-start">
+        <div class="panel" style="flex:1">
+          <div class="panel-header"><div class="panel-title">Simulation Configuration</div></div>
+          <div class="settings-form">
+            <div class="form-row"><label>Packet Rate (ms)</label><input type="number" class="ctrl-input" value="700"/></div>
+            <div class="form-row"><label>Attack Threshold (hits)</label><input type="number" class="ctrl-input" value="3"/></div>
+            <div class="form-row"><label>Offline Threshold (hits)</label><input type="number" class="ctrl-input" value="8"/></div>
+            <div class="form-row"><label>Recovery Time (ms)</label><input type="number" class="ctrl-input" value="15000"/></div>
+            <button class="btn btn-primary" style="margin-top:8px">Apply Settings</button>
+          </div>
+        </div>
+        <div class="panel" style="flex:1">
+          <div class="panel-header"><div class="panel-title">Network Configuration</div></div>
+          <div class="settings-form">
+            <div class="form-row"><label>Gateway IP</label><input type="text" class="ctrl-input" value="192.168.4.1"/></div>
+            <div class="form-row"><label>Subnet</label><input type="text" class="ctrl-input" value="192.168.4.0/24"/></div>
+            <div class="form-row"><label>IDS Host IP</label><input type="text" class="ctrl-input" value="192.168.1.100"/></div>
+            <div class="form-row">
+              <label>Alert Severity Threshold</label>
+              <select class="ctrl-select"><option>High (75+)</option><option>Medium (50+)</option><option>Low (25+)</option></select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /page-settings -->
+
+  </main>
+</div><!-- /main-area -->
+
+<script>
+  // Initialize dynamic background for login
+  if (typeof particlesJS !== 'undefined') {
+    particlesJS('particles-js', {
+      "particles": {
+        "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+        "color": { "value": "#6366f1" },
+        "shape": { "type": "circle" },
+        "opacity": { "value": 0.5, "random": false },
+        "size": { "value": 3, "random": true },
+        "line_linked": { "enable": true, "distance": 150, "color": "#6366f1", "opacity": 0.4, "width": 1 },
+        "move": { "enable": true, "speed": 2, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+        "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 1 } }, "push": { "particles_nb": 4 } }
+      },
+      "retina_detect": true
+    });
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script src="js/app.js?v=3001"></script>
+</body>
+
+</html>
+
+
+
