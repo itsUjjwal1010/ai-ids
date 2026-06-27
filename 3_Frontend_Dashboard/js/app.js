@@ -10,8 +10,8 @@
 // Spring Boot backend: https://your-spring-ids.onrender.com
 // Flask inference backend: https://your-flask-ids.onrender.com
 const CONFIG = {
-  SPRING_BASE_URL: 'https://your-spring-ids.onrender.com',
-  FLASK_BASE_URL:  'https://your-flask-ids.onrender.com',
+  SPRING_BASE_URL: 'https://ai-ids-2-lm9l.onrender.com',
+  FLASK_BASE_URL:  'https://ai-ids-1-6ton.onrender.com',
 };
 
 // ── CIC-IoT 2023 Label Mapping ────────────────────────────────────────────────
