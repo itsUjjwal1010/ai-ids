@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Spring Boot parent manages all dependency versions -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.0</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.ids</groupId>
+    <artifactId>ids-dashboard</artifactId>
+    <version>1.0.0</version>
+    <name>IDS Dashboard</name>
+    <description>AI Multi-Layer Intrusion Detection System for IoT Networks — Spring Boot + WebSocket</description>
+
+    <properties>
+        <!-- Java version on the development machine -->
+        <java.version>22</java.version>
+    </properties>
+
+    <dependencies>
+        <!--
+            spring-boot-starter-web:
+            Provides REST API support + embedded Apache Tomcat server.
+            No external server needed — app runs standalone.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+            spring-boot-starter-websocket:
+            Enables STOMP WebSocket message broker.
+            Used for real-time packet push from server → dashboard browser.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <!--
+            lombok:
+            Annotation processor — generates getters/setters/builders at compile time.
+            Reduces model class boilerplate significantly.
+        -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!--
+            jackson-databind:
+            Automatically converts Java objects (Packet, IoTDevice) to JSON.
+            Required for REST endpoints and WebSocket message serialization.
+        -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Test framework -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Exclude Lombok from the final JAR — only needed at compile time -->
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                    <!-- JVM args needed for Spring Boot + Java 22 compatibility -->
+                    <jvmArguments>
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                    </jvmArguments>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
